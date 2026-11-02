@@ -80,6 +80,11 @@
                         <span>Orders</span>
                     </a>
 
+                    <a href="{{ Route::has('admin.contacts') ? route('admin.contacts') : '#' }}" class="nav-link flex items-center gap-3 px-4 py-2.5 text-gray-100 hover:text-white hover:bg-sky-700 rounded-lg transition {{ request()->routeIs('admin.contacts*') ? 'bg-primary text-white shadow-md font-medium' : '' }}">
+                        <i class="fa-solid fa-envelope w-5 text-center"></i>
+                        <span>Messages</span>
+                    </a>
+
                     <a href="{{ Route::has('admin.slides') ? route('admin.slides') : '#' }}" class="nav-link flex items-center gap-3 px-4 py-2.5 text-gray-100 hover:text-white hover:bg-sky-700 rounded-lg transition {{ request()->routeIs('admin.slides*') ? 'bg-primary text-white shadow-md font-medium' : '' }}">
                         <i class="fa-solid fa-images w-5 text-center"></i>
                         <span>Slides</span>

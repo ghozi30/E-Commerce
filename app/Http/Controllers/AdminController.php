@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Brand;
 use App\Models\Category;
+use App\Models\Contact;
 use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\Product;
@@ -496,5 +497,21 @@ class AdminController extends Controller
         $order->save();
 
         return redirect()->back()->with('status', 'Order status updated successfully!');
+    }
+
+    // Contacts
+    public function contacts(): View
+    {
+        $contacts = Contact::orderBy('id', 'DESC')->paginate(10);
+
+        return view('admin.contacts', compact('contacts'));
+    }
+
+    public function contact_delete(int $id): RedirectResponse
+    {
+        $contact = Contact::findOrFail($id);
+        $contact->delete();
+
+        return redirect()->route('admin.contacts')->with('status', 'Contact message has been deleted successfully!');
     }
 }

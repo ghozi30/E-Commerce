@@ -65,24 +65,27 @@
                         <ul class="flex space-x-8 font-medium text-gray-700">
                             <li><a href="{{ route('home.index') }}" class="hover:text-primary transition {{ request()->routeIs('home.index') ? 'text-primary font-bold' : '' }}">Home</a></li>
                             <li><a href="{{ route('shop.index') }}" class="hover:text-primary transition {{ request()->routeIs('shop*') ? 'text-primary font-bold' : '' }}">Shop</a></li>
-                            <li><a href="{{ Route::has('cart.index') ? route('cart.index') : '#' }}" class="hover:text-primary transition">Cart</a></li>
-                            <li><a href="{{ Route::has('wishlist.index') ? route('wishlist.index') : '#' }}" class="hover:text-primary transition">Wishlist</a></li>
-                            <li><a href="{{ Route::has('contact.index') ? route('contact.index') : '#' }}" class="hover:text-primary transition">Contact</a></li>
+                            <li><a href="{{ route('cart.index') }}" class="hover:text-primary transition {{ request()->routeIs('cart*') ? 'text-primary font-bold' : '' }}">Cart</a></li>
+                            <li><a href="{{ route('wishlist.index') }}" class="hover:text-primary transition {{ request()->routeIs('wishlist*') ? 'text-primary font-bold' : '' }}">Wishlist</a></li>
+                            <li><a href="{{ route('home.contact') }}" class="hover:text-primary transition {{ request()->routeIs('home.contact*') ? 'text-primary font-bold' : '' }}">Contact</a></li>
                         </ul>
                     </nav>
                 </div>
 
                 <div class="w-1/4 flex justify-end items-center space-x-6">
-                    <div class="relative group">
+                    <div class="relative group" id="search-container">
                         <button class="text-2xl hover:text-primary"><i
                                 class="fa-solid fa-magnifying-glass"></i></button>
                         <div
-                            class="absolute right-0 mt-2 w-64 bg-white border shadow-lg p-3 rounded opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
-                            <form class="flex">
-                                <input type="text" placeholder="Search..."
-                                    class="w-full border p-2 text-sm outline-none focus:border-primary" />
-                                <button class="p-2 text-primary"><i class="fa-solid fa-magnifying-glass"></i></button>
+                            class="absolute right-0 mt-2 w-80 bg-white border border-gray-200 shadow-xl p-3 rounded-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
+                            <form action="{{ route('shop.index') }}" method="GET" class="flex relative">
+                                <input type="text" id="header-search-input" name="search" autocomplete="off" placeholder="Search products..."
+                                    class="w-full border border-gray-300 p-2 text-sm outline-none focus:border-primary rounded-l-lg bg-gray-50 focus:bg-white" />
+                                <button type="submit" class="p-2 bg-primary text-white rounded-r-lg px-3 hover:bg-blue-600 transition"><i class="fa-solid fa-magnifying-glass"></i></button>
                             </form>
+                            <!-- Live search dropdown -->
+                            <div id="search-results-box" class="hidden mt-2 max-h-72 overflow-y-auto divide-y divide-gray-100 border-t border-gray-100 pt-2 text-left">
+                            </div>
                         </div>
                     </div>
 
@@ -186,8 +189,8 @@
             </div>
 
             <div class="pb-2">
-                <form action="shop.php" method="GET" class="relative">
-                    <input type="text" name="q" placeholder="Search for products..."
+                <form action="{{ route('shop.index') }}" method="GET" class="relative">
+                    <input type="text" name="search" placeholder="Search for products..."
                         class="w-full bg-gray-100 border-none px-4 py-2.5 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:bg-white transition-all outline-none">
                     <button type="submit"
                         class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary">
@@ -208,9 +211,9 @@
             <ul class="space-y-4">
                 <li><a href="{{ route('home.index') }}" class="block hover:text-primary">Home</a></li>
                 <li><a href="{{ route('shop.index') }}" class="block hover:text-primary">Shop</a></li>
-                <li><a href="{{ Route::has('cart.index') ? route('cart.index') : '#' }}" class="block hover:text-primary">Cart</a></li>
-                <li><a href="{{ Route::has('wishlist.index') ? route('wishlist.index') : '#' }}" class="block hover:text-primary">Wishlist</a></li>
-                <li><a href="{{ Route::has('contact.index') ? route('contact.index') : '#' }}" class="block hover:text-primary">Contact</a></li>
+                <li><a href="{{ route('cart.index') }}" class="block hover:text-primary">Cart</a></li>
+                <li><a href="{{ route('wishlist.index') }}" class="block hover:text-primary">Wishlist</a></li>
+                <li><a href="{{ route('home.contact') }}" class="block hover:text-primary">Contact</a></li>
             </ul>
         </nav>
     </div>
@@ -261,10 +264,9 @@
                 <div>
                     <h4 class="text-white font-bold text-lg mb-6">Information</h4>
                     <ul class="space-y-2 text-sm">
-                        <li><a href="about.php" class="hover:text-primary transition">About Us</a></li>
-                        <li><a href="#" class="hover:text-primary transition">How to Shop</a></li>
-                        <li><a href="#" class="hover:text-primary transition">FAQ</a></li>
-                        <li><a href="contact.php" class="hover:text-primary transition">Contact Us</a></li>
+                        <li><a href="{{ route('shop.index') }}" class="hover:text-primary transition">Shop Catalog</a></li>
+                        <li><a href="{{ route('cart.index') }}" class="hover:text-primary transition">Shopping Cart</a></li>
+                        <li><a href="{{ route('home.contact') }}" class="hover:text-primary transition">Contact Us</a></li>
                     </ul>
                 </div>
 
@@ -491,6 +493,52 @@
             if (!input) return;
             let val = parseInt(input.value) + amount;
             input.value = val < 1 ? 1 : val;
+        }
+
+        // --- 7. Live Product Search Autocomplete ---
+        const searchInput = document.getElementById('header-search-input');
+        const searchResultsBox = document.getElementById('search-results-box');
+
+        if (searchInput && searchResultsBox) {
+            let debounceTimer = null;
+            searchInput.addEventListener('input', function() {
+                clearTimeout(debounceTimer);
+                const query = this.value.trim();
+                if (query.length < 1) {
+                    searchResultsBox.innerHTML = '';
+                    searchResultsBox.classList.add('hidden');
+                    return;
+                }
+
+                debounceTimer = setTimeout(() => {
+                    fetch(`{{ route('home.search') }}?name=${encodeURIComponent(query)}`)
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data && data.length > 0) {
+                                searchResultsBox.innerHTML = data.map(item => {
+                                    const imgUrl = item.image ? `{{ asset('uploads/products/thumbnails') }}/${item.image}` : `{{ asset('assets/images/logo.png') }}`;
+                                    const price = item.sale_price ? `$${item.sale_price}` : `$${item.regular_price}`;
+                                    return `
+                                        <a href="{{ url('/product') }}/${item.slug}" class="flex items-center gap-3 py-2 px-1 hover:bg-gray-50 transition rounded text-left">
+                                            <img src="${imgUrl}" onerror="this.onerror=null; this.src='{{ asset('uploads/products') }}/${item.image}';" class="w-10 h-10 object-cover rounded border border-gray-100 flex-shrink-0" alt="${item.name}">
+                                            <div class="flex-1 min-w-0">
+                                                <p class="text-xs font-semibold text-gray-800 truncate">${item.name}</p>
+                                                <span class="text-xs font-bold text-primary">${price}</span>
+                                            </div>
+                                        </a>
+                                    `;
+                                }).join('');
+                                searchResultsBox.classList.remove('hidden');
+                            } else {
+                                searchResultsBox.innerHTML = '<p class="text-xs text-gray-400 py-3 text-center">No products found</p>';
+                                searchResultsBox.classList.remove('hidden');
+                            }
+                        })
+                        .catch(err => {
+                            console.error('Search error:', err);
+                        });
+                }, 300);
+            });
         }
     </script>
 

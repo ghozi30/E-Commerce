@@ -16,6 +16,9 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [HomeController::class, 'index'])->name('home.index');
 Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
 Route::get('/product/{slug}', [ShopController::class, 'product_details'])->name('shop.product.details');
+Route::get('/contact-us', [HomeController::class, 'contact'])->name('home.contact');
+Route::post('/contact-us/store', [HomeController::class, 'contact_store'])->name('home.contact.store');
+Route::get('/search', [HomeController::class, 'search'])->name('home.search');
 
 // Cart Routes
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
@@ -93,6 +96,10 @@ Route::middleware([AuthAdmin::class])->group(function () {
     Route::get('/admin/orders', [AdminController::class, 'orders'])->name('admin.orders');
     Route::get('/admin/order/{order_id}/details', [AdminController::class, 'order_details'])->name('admin.order.details');
     Route::put('/admin/order/status/update', [AdminController::class, 'update_order_status'])->name('admin.order.status.update');
+
+    // Contacts
+    Route::get('/admin/contacts', [AdminController::class, 'contacts'])->name('admin.contacts');
+    Route::delete('/admin/contact/{id}/delete', [AdminController::class, 'contact_delete'])->name('admin.contact.delete');
 });
 
 require __DIR__.'/auth.php';
