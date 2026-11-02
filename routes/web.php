@@ -38,7 +38,11 @@ Route::delete('/wishlist/empty', [CartController::class, 'empty_wishlist'])->nam
 Route::post('/wishlist/move-to-cart/{rowId}', [CartController::class, 'move_to_cart'])->name('wishlist.move.to.cart');
 
 Route::get('/dashboard', function () {
-    return view('dashboard');
+    if (Auth::user()->utype === 'ADM') {
+        return redirect()->route('admin.index');
+    }
+
+    return redirect()->route('user.index');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
