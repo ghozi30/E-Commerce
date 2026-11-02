@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Brand;
 use App\Models\Category;
+use App\Models\Product;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -195,5 +196,180 @@ class AdminController extends Controller
         $category->delete();
 
         return redirect()->route('admin.categories')->with('status', 'Category has been deleted successfully!');
+    }
+
+    public function products(): View
+    {
+        $products = Product::with(['category', 'brand'])->orderBy('id', 'DESC')->paginate(10);
+
+        return view('admin.products', compact('products'));
+    }
+
+    public function add_product(): View
+    {
+        $categories = Category::select('id', 'name')->orderBy('name')->get();
+        $brands = Brand::select('id', 'name')->orderBy('name')->get();
+
+        return view('admin.product-add', compact('categories', 'brands'));
+    }
+
+    public function product_store(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'name' => 'required',
+            'slug' => 'required|unique:products,slug',
+            'short_description' => 'nullable',
+            'description' => 'nullable',
+            'regular_price' => 'required|numeric',
+            'sale_price' => 'nullable|numeric',
+            'SKU' => 'required|unique:products,SKU',
+            'stock_status' => 'required|in:instock,outofstock',
+            'featured' => 'nullable|boolean',
+            'quantity' => 'required|numeric',
+            'image' => 'nullable|mimes:png,jpg,jpeg,webp|max:2048',
+            'images.*' => 'nullable|mimes:png,jpg,jpeg,webp|max:2048',
+            'category_id' => 'required|exists:categories,id',
+            'brand_id' => 'required|exists:brands,id',
+        ]);
+
+        $product = new Product;
+        $product->name = $request->name;
+        $product->slug = Str::slug($request->slug ?: $request->name);
+        $product->short_description = $request->short_description;
+        $product->description = $request->description;
+        $product->regular_price = $request->regular_price;
+        $product->sale_price = $request->sale_price ?: null;
+        $product->SKU = $request->SKU;
+        $product->stock_status = $request->stock_status;
+        $product->featured = $request->has('featured') ? 1 : 0;
+        $product->quantity = $request->quantity;
+        $product->category_id = $request->category_id;
+        $product->brand_id = $request->brand_id;
+
+        if ($request->hasFile('image')) {
+            $image = $request->file('image');
+            $file_extension = $image->extension();
+            $file_name = Carbon::now()->timestamp.'.'.$file_extension;
+            $image->move(public_path('uploads/products'), $file_name);
+            $product->image = $file_name;
+        }
+
+        if ($request->hasFile('images')) {
+            $gallery_images = [];
+            $counter = 1;
+            foreach ($request->file('images') as $file) {
+                $file_extension = $file->extension();
+                $file_name = Carbon::now()->timestamp.'-'.$counter.'.'.$file_extension;
+                $file->move(public_path('uploads/products'), $file_name);
+                $gallery_images[] = $file_name;
+                $counter++;
+            }
+            $product->images = implode(',', $gallery_images);
+        }
+
+        $product->save();
+
+        return redirect()->route('admin.products')->with('status', 'Product has been added successfully!');
+    }
+
+    public function product_edit(int $id): View
+    {
+        $product = Product::findOrFail($id);
+        $categories = Category::select('id', 'name')->orderBy('name')->get();
+        $brands = Brand::select('id', 'name')->orderBy('name')->get();
+
+        return view('admin.product-edit', compact('product', 'categories', 'brands'));
+    }
+
+    public function product_update(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'name' => 'required',
+            'slug' => 'required|unique:products,slug,'.$request->id,
+            'short_description' => 'nullable',
+            'description' => 'nullable',
+            'regular_price' => 'required|numeric',
+            'sale_price' => 'nullable|numeric',
+            'SKU' => 'required|unique:products,SKU,'.$request->id,
+            'stock_status' => 'required|in:instock,outofstock',
+            'featured' => 'nullable|boolean',
+            'quantity' => 'required|numeric',
+            'image' => 'nullable|mimes:png,jpg,jpeg,webp|max:2048',
+            'images.*' => 'nullable|mimes:png,jpg,jpeg,webp|max:2048',
+            'category_id' => 'required|exists:categories,id',
+            'brand_id' => 'required|exists:brands,id',
+        ]);
+
+        $product = Product::findOrFail($request->id);
+        $product->name = $request->name;
+        $product->slug = Str::slug($request->slug ?: $request->name);
+        $product->short_description = $request->short_description;
+        $product->description = $request->description;
+        $product->regular_price = $request->regular_price;
+        $product->sale_price = $request->sale_price ?: null;
+        $product->SKU = $request->SKU;
+        $product->stock_status = $request->stock_status;
+        $product->featured = $request->has('featured') ? 1 : 0;
+        $product->quantity = $request->quantity;
+        $product->category_id = $request->category_id;
+        $product->brand_id = $request->brand_id;
+
+        if ($request->hasFile('image')) {
+            if ($product->image && File::exists(public_path('uploads/products/'.$product->image))) {
+                File::delete(public_path('uploads/products/'.$product->image));
+            }
+
+            $image = $request->file('image');
+            $file_extension = $image->extension();
+            $file_name = Carbon::now()->timestamp.'.'.$file_extension;
+            $image->move(public_path('uploads/products'), $file_name);
+            $product->image = $file_name;
+        }
+
+        if ($request->hasFile('images')) {
+            if ($product->images) {
+                foreach (explode(',', $product->images) as $old_img) {
+                    if (File::exists(public_path('uploads/products/'.trim($old_img)))) {
+                        File::delete(public_path('uploads/products/'.trim($old_img)));
+                    }
+                }
+            }
+
+            $gallery_images = [];
+            $counter = 1;
+            foreach ($request->file('images') as $file) {
+                $file_extension = $file->extension();
+                $file_name = Carbon::now()->timestamp.'-'.$counter.'.'.$file_extension;
+                $file->move(public_path('uploads/products'), $file_name);
+                $gallery_images[] = $file_name;
+                $counter++;
+            }
+            $product->images = implode(',', $gallery_images);
+        }
+
+        $product->save();
+
+        return redirect()->route('admin.products')->with('status', 'Product has been updated successfully!');
+    }
+
+    public function product_delete(int $id): RedirectResponse
+    {
+        $product = Product::findOrFail($id);
+
+        if ($product->image && File::exists(public_path('uploads/products/'.$product->image))) {
+            File::delete(public_path('uploads/products/'.$product->image));
+        }
+
+        if ($product->images) {
+            foreach (explode(',', $product->images) as $img) {
+                if (File::exists(public_path('uploads/products/'.trim($img)))) {
+                    File::delete(public_path('uploads/products/'.trim($img)));
+                }
+            }
+        }
+
+        $product->delete();
+
+        return redirect()->route('admin.products')->with('status', 'Product has been deleted successfully!');
     }
 }
