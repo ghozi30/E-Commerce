@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\CartController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ShopController;
@@ -15,6 +16,21 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [HomeController::class, 'index'])->name('home.index');
 Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
 Route::get('/product/{slug}', [ShopController::class, 'product_details'])->name('shop.product.details');
+
+// Cart Routes
+Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+Route::post('/cart/add', [CartController::class, 'add_to_cart'])->name('cart.add');
+Route::put('/cart/increase-quantity/{rowId}', [CartController::class, 'increase_cart_quantity'])->name('cart.increase.qty');
+Route::put('/cart/decrease-quantity/{rowId}', [CartController::class, 'decrease_cart_quantity'])->name('cart.decrease.qty');
+Route::delete('/cart/remove/{rowId}', [CartController::class, 'remove_item'])->name('cart.remove');
+Route::delete('/cart/empty', [CartController::class, 'empty_cart'])->name('cart.empty');
+
+// Wishlist Routes
+Route::get('/wishlist', [CartController::class, 'wishlist'])->name('wishlist.index');
+Route::post('/wishlist/add', [CartController::class, 'add_to_wishlist'])->name('wishlist.add');
+Route::delete('/wishlist/remove/{rowId}', [CartController::class, 'remove_item_from_wishlist'])->name('wishlist.remove');
+Route::delete('/wishlist/empty', [CartController::class, 'empty_wishlist'])->name('wishlist.empty');
+Route::post('/wishlist/move-to-cart/{rowId}', [CartController::class, 'move_to_cart'])->name('wishlist.move.to.cart');
 
 Route::get('/dashboard', function () {
     return view('dashboard');

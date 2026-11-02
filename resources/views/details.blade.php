@@ -131,6 +131,14 @@
                     </div>
                 </form>
 
+                <form action="{{ route('wishlist.add') }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="id" value="{{ $product->id }}">
+                    <button type="submit" class="w-full py-2.5 border border-red-200 text-red-500 hover:bg-red-50 font-medium rounded-lg transition text-sm flex items-center justify-center gap-2 shadow-sm">
+                        <i class="fa-regular fa-heart"></i> Add to Wishlist
+                    </button>
+                </form>
+
             </div>
 
         </div>
@@ -196,3 +204,4 @@
     }
 </script>
 @endpush
+

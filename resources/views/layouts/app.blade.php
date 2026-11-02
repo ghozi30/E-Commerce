@@ -86,12 +86,20 @@
                         </div>
                     </div>
 
-                    <a href="wishlist.php" class="text-2xl hover:text-primary"><i class="fa-regular fa-heart"></i></a>
+                    <a href="{{ route('wishlist.index') }}" class="text-2xl hover:text-primary relative">
+                        <i class="fa-regular fa-heart"></i>
+                        @if(Cart::instance('wishlist')->count() > 0)
+                            <span class="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-bold">
+                                {{ Cart::instance('wishlist')->count() }}
+                            </span>
+                        @endif
+                    </a>
 
-                    <a href="cart.php" class="text-2xl hover:text-primary relative">
+                    <a href="{{ route('cart.index') }}" class="text-2xl hover:text-primary relative">
                         <i class="fa-solid fa-bag-shopping"></i>
-                        <span
-                            class="absolute -top-2 -right-2 bg-primary text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">3</span>
+                        <span class="absolute -top-2 -right-2 bg-primary text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                            {{ Cart::instance('cart')->count() }}
+                        </span>
                     </a>
 
                     <div class="relative group">
@@ -141,14 +149,20 @@
                 </a>
 
                 <div class="flex items-center space-x-5">
-                    <a href="wishlist.php" class="text-xl hover:text-primary">
+                    <a href="{{ route('wishlist.index') }}" class="text-xl hover:text-primary relative">
                         <i class="fa-regular fa-heart"></i>
+                        @if(Cart::instance('wishlist')->count() > 0)
+                            <span class="absolute -top-2 -right-2 bg-red-500 text-white text-[9px] rounded-full w-4 h-4 flex items-center justify-center font-bold">
+                                {{ Cart::instance('wishlist')->count() }}
+                            </span>
+                        @endif
                     </a>
 
-                    <a href="cart.php" class="text-xl hover:text-primary relative">
+                    <a href="{{ route('cart.index') }}" class="text-xl hover:text-primary relative">
                         <i class="fa-solid fa-bag-shopping"></i>
-                        <span
-                            class="absolute -top-2 -right-2 bg-primary text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center">3</span>
+                        <span class="absolute -top-2 -right-2 bg-primary text-white text-[9px] rounded-full w-4 h-4 flex items-center justify-center font-bold">
+                            {{ Cart::instance('cart')->count() }}
+                        </span>
                     </a>
 
                     <div class="relative">
