@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Coupon;
+use App\Models\Order;
 use App\Models\Product;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,7 +19,13 @@ class AdminController extends Controller
 {
     public function index(): View
     {
-        return view('admin.index');
+        $totalSales = Order::where('status', '!=', 'canceled')->sum('total');
+        $totalOrders = Order::count();
+        $totalCustomers = User::where('utype', 'USR')->count();
+        $totalProducts = Product::count();
+        $recentOrders = Order::with('user', 'transaction')->orderBy('id', 'DESC')->take(5)->get();
+
+        return view('admin.index', compact('totalSales', 'totalOrders', 'totalCustomers', 'totalProducts', 'recentOrders'));
     }
 
     public function brands(): View
@@ -442,5 +450,51 @@ class AdminController extends Controller
         $coupon->delete();
 
         return redirect()->route('admin.coupons')->with('status', 'Coupon has been deleted successfully!');
+    }
+
+    // Orders
+    public function orders(): View
+    {
+        $orders = Order::with('user', 'transaction')->orderBy('id', 'DESC')->paginate(12);
+
+        return view('admin.orders', compact('orders'));
+    }
+
+    public function order_details(int $order_id): View
+    {
+        $order = Order::with(['orderItems.product', 'transaction', 'user'])->findOrFail($order_id);
+        $orderItems = $order->orderItems()->paginate(10);
+        $transaction = $order->transaction;
+
+        return view('admin.order-details', compact('order', 'orderItems', 'transaction'));
+    }
+
+    public function update_order_status(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'order_id' => 'required|exists:orders,id',
+            'order_status' => 'required|in:ordered,delivered,canceled',
+        ]);
+
+        $order = Order::findOrFail($request->order_id);
+        $order->status = $request->order_status;
+
+        if ($request->order_status === 'delivered') {
+            $order->delivered_date = Carbon::now();
+            if ($order->transaction) {
+                $order->transaction->status = 'approved';
+                $order->transaction->save();
+            }
+        } elseif ($request->order_status === 'canceled') {
+            $order->canceled_date = Carbon::now();
+            if ($order->transaction && $order->transaction->mode === 'card') {
+                $order->transaction->status = 'refunded';
+                $order->transaction->save();
+            }
+        }
+
+        $order->save();
+
+        return redirect()->back()->with('status', 'Order status updated successfully!');
     }
 }

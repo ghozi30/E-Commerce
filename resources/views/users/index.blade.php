@@ -43,8 +43,8 @@
                         Dari halaman ringkasan akun Anda, Anda dapat dengan mudah melihat pesanan terbaru, mengelola alamat pengiriman dan penagihan, serta memperbarui password dan detail profil Anda.
                     </p>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t border-gray-100">
-                        <a href="{{ Route::has('user.orders') ? route('user.orders') : '#' }}" class="p-4 border rounded-lg hover:border-primary transition group text-center">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t border-gray-100 mb-8">
+                        <a href="{{ route('user.orders') }}" class="p-4 border rounded-lg hover:border-primary transition group text-center">
                             <i class="fa fa-shopping-cart text-2xl text-primary group-hover:scale-110 transition-transform mb-2 inline-block"></i>
                             <h4 class="font-bold text-gray-800 text-sm">Pesanan Saya</h4>
                             <p class="text-xs text-gray-500 mt-1">Cek status & riwayat pesanan</p>
@@ -60,6 +60,54 @@
                             <p class="text-xs text-gray-500 mt-1">Ubah nama & password</p>
                         </a>
                     </div>
+
+                    <!-- Recent Orders -->
+                    @if(isset($orders) && $orders->count() > 0)
+                        <div class="border-t pt-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="font-bold text-gray-800 text-base">Pesanan Terbaru</h3>
+                                <a href="{{ route('user.orders') }}" class="text-xs text-primary hover:underline font-semibold">
+                                    Lihat Semua &rarr;
+                                </a>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left whitespace-nowrap text-sm">
+                                    <thead class="bg-gray-50 text-gray-500 text-xs uppercase font-semibold">
+                                        <tr>
+                                            <th class="px-4 py-2.5">No</th>
+                                            <th class="px-4 py-2.5">Tanggal</th>
+                                            <th class="px-4 py-2.5">Total</th>
+                                            <th class="px-4 py-2.5">Status</th>
+                                            <th class="px-4 py-2.5 text-center">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-100">
+                                        @foreach($orders as $ord)
+                                            <tr class="hover:bg-gray-50 transition">
+                                                <td class="px-4 py-2.5 font-bold text-gray-700">#ORD-{{ str_pad($ord->id, 5, '0', STR_PAD_LEFT) }}</td>
+                                                <td class="px-4 py-2.5 text-gray-600">{{ $ord->created_at->format('M d, Y') }}</td>
+                                                <td class="px-4 py-2.5 font-bold text-primary">${{ number_format($ord->total, 2) }}</td>
+                                                <td class="px-4 py-2.5">
+                                                    @if ($ord->status == 'delivered')
+                                                        <span class="bg-green-100 text-green-700 px-2 py-0.5 rounded text-xs font-semibold">Delivered</span>
+                                                    @elseif ($ord->status == 'canceled')
+                                                        <span class="bg-red-100 text-red-700 px-2 py-0.5 rounded text-xs font-semibold">Canceled</span>
+                                                    @else
+                                                        <span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-xs font-semibold">Ordered</span>
+                                                    @endif
+                                                </td>
+                                                <td class="px-4 py-2.5 text-center">
+                                                    <a href="{{ route('user.order.details', ['order_id' => $ord->id]) }}" class="text-primary hover:underline font-medium text-xs">
+                                                        Detail
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    @endif
                 </div>
             </div>
 

@@ -48,6 +48,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/checkout', [CartController::class, 'checkout'])->name('cart.checkout');
     Route::post('/place-an-order', [CartController::class, 'place_an_order'])->name('cart.place.an.order');
     Route::get('/order-confirmation', [CartController::class, 'order_confirmation'])->name('cart.order.confirmation');
+
+    // User Orders Routes
+    Route::get('/account-orders', [UserController::class, 'orders'])->name('user.orders');
+    Route::get('/account-order-details/{order_id}', [UserController::class, 'order_details'])->name('user.order.details');
+    Route::put('/account-order/cancel', [UserController::class, 'order_cancel'])->name('user.order.cancel');
 });
 
 Route::middleware([AuthAdmin::class])->group(function () {
@@ -83,6 +88,11 @@ Route::middleware([AuthAdmin::class])->group(function () {
     Route::get('/admin/coupon/{id}/edit', [AdminController::class, 'coupon_edit'])->name('admin.coupon.edit');
     Route::put('/admin/coupon/update', [AdminController::class, 'coupon_update'])->name('admin.coupon.update');
     Route::delete('/admin/coupon/{id}/delete', [AdminController::class, 'coupon_delete'])->name('admin.coupon.delete');
+
+    // Orders
+    Route::get('/admin/orders', [AdminController::class, 'orders'])->name('admin.orders');
+    Route::get('/admin/order/{order_id}/details', [AdminController::class, 'order_details'])->name('admin.order.details');
+    Route::put('/admin/order/status/update', [AdminController::class, 'update_order_status'])->name('admin.order.status.update');
 });
 
 require __DIR__.'/auth.php';
