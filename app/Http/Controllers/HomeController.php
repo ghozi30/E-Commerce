@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\Contact;
 use App\Models\Product;
+use App\Models\Slide;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,11 +15,12 @@ class HomeController extends Controller
 {
     public function index(): View
     {
+        $slides = Slide::where('status', 1)->get();
         $categories = Category::withCount('products')->orderBy('name', 'ASC')->get();
         $featured_products = Product::where('featured', 1)->take(8)->get();
         $latest_products = Product::orderBy('id', 'DESC')->take(8)->get();
 
-        return view('index', compact('categories', 'featured_products', 'latest_products'));
+        return view('index', compact('slides', 'categories', 'featured_products', 'latest_products'));
     }
 
     public function contact(): View

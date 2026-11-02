@@ -3,34 +3,40 @@
     <section class="relative bg-gray-50 overflow-hidden">
         <div class="swiper-container main-slider h-[500px] lg:h-[600px]">
             <div class="swiper-wrapper">
-                <div class="swiper-slide flex items-center justify-center">
-                    <div class="container mx-auto px-4 grid lg:grid-cols-2 gap-8 items-center h-full">
-                        <div class="text-center lg:text-left space-y-4 animate-fadeIn">
-                            <h2 class="text-4xl lg:text-6xl font-bold text-gray-800 leading-tight">New Stylish <br /> Decor Furniture</h2>
-                            <p class="text-lg text-gray-600">Unique Furniture Style Design for Your Family</p>
-                            <a href="{{ route('shop.index') }}" class="inline-block bg-primary text-white px-8 py-3 rounded-lg hover:bg-blue-600 transition shadow-lg mt-4 font-medium">
-                                Shop Catalog
-                            </a>
+                @if(isset($slides) && $slides->count() > 0)
+                    @foreach($slides as $slide)
+                        <div class="swiper-slide flex items-center justify-center">
+                            <div class="container mx-auto px-4 grid lg:grid-cols-2 gap-8 items-center h-full">
+                                <div class="text-center lg:text-left space-y-4 animate-fadeIn">
+                                    <span class="text-xs uppercase tracking-widest font-bold text-primary bg-sky-50 px-3 py-1 rounded-full border border-sky-100">{{ $slide->tagline }}</span>
+                                    <h2 class="text-4xl lg:text-6xl font-bold text-gray-800 leading-tight">{{ $slide->title }}</h2>
+                                    <p class="text-lg text-gray-600">{{ $slide->subtitle }}</p>
+                                    <a href="{{ $slide->link }}" class="inline-block bg-primary text-white px-8 py-3 rounded-lg hover:bg-blue-600 transition shadow-lg mt-4 font-medium">
+                                        Shop Now
+                                    </a>
+                                </div>
+                                <div class="hidden lg:block text-center">
+                                    <img src="{{ asset('uploads/slides/'.$slide->image) }}" onerror="this.onerror=null; this.src='{{ asset('assets/images/slider/'.$slide->image) }}';" alt="{{ $slide->title }}" class="mx-auto max-h-[420px] object-contain" />
+                                </div>
+                            </div>
                         </div>
-                        <div class="hidden lg:block">
-                            <img src="{{ asset('assets/images/slider/slider-item-1.png') }}" alt="Furniture" class="mx-auto" />
+                    @endforeach
+                @else
+                    <div class="swiper-slide flex items-center justify-center">
+                        <div class="container mx-auto px-4 grid lg:grid-cols-2 gap-8 items-center h-full">
+                            <div class="text-center lg:text-left space-y-4 animate-fadeIn">
+                                <h2 class="text-4xl lg:text-6xl font-bold text-gray-800 leading-tight">New Stylish <br /> Decor Furniture</h2>
+                                <p class="text-lg text-gray-600">Unique Furniture Style Design for Your Family</p>
+                                <a href="{{ route('shop.index') }}" class="inline-block bg-primary text-white px-8 py-3 rounded-lg hover:bg-blue-600 transition shadow-lg mt-4 font-medium">
+                                    Shop Catalog
+                                </a>
+                            </div>
+                            <div class="hidden lg:block">
+                                <img src="{{ asset('assets/images/slider/slider-item-1.png') }}" alt="Furniture" class="mx-auto" />
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="swiper-slide flex items-center justify-center">
-                    <div class="container mx-auto px-4 grid lg:grid-cols-2 gap-8 items-center h-full">
-                        <div class="text-center lg:text-left space-y-4">
-                            <h2 class="text-4xl lg:text-6xl font-bold text-gray-800 leading-tight">Modern Living <br /> Room Sets</h2>
-                            <p class="text-lg text-gray-600">Comfort and Style combined.</p>
-                            <a href="{{ route('shop.index') }}" class="inline-block bg-primary text-white px-8 py-3 rounded-lg hover:bg-blue-600 transition shadow-lg mt-4 font-medium">
-                                Explore Store
-                            </a>
-                        </div>
-                        <div class="hidden lg:block">
-                            <img src="{{ asset('assets/images/slider/slider-item-2.png') }}" alt="Furniture" class="mx-auto" />
-                        </div>
-                    </div>
-                </div>
+                @endif
             </div>
             <div class="swiper-pagination"></div>
         </div>

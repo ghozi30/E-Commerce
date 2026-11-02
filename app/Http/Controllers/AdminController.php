@@ -8,6 +8,7 @@ use App\Models\Contact;
 use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\Slide;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
@@ -513,5 +514,101 @@ class AdminController extends Controller
         $contact->delete();
 
         return redirect()->route('admin.contacts')->with('status', 'Contact message has been deleted successfully!');
+    }
+
+    // Slides
+    public function slides(): View
+    {
+        $slides = Slide::orderBy('id', 'DESC')->paginate(10);
+
+        return view('admin.slides', compact('slides'));
+    }
+
+    public function slide_add(): View
+    {
+        return view('admin.slide-add');
+    }
+
+    public function slide_store(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'tagline' => 'required|string|max:255',
+            'title' => 'required|string|max:255',
+            'subtitle' => 'required|string|max:255',
+            'link' => 'required|string|max:255',
+            'status' => 'required|boolean',
+            'image' => 'required|mimes:png,jpg,jpeg,webp|max:2048',
+        ]);
+
+        $slide = new Slide;
+        $slide->tagline = $request->tagline;
+        $slide->title = $request->title;
+        $slide->subtitle = $request->subtitle;
+        $slide->link = $request->link;
+        $slide->status = $request->status;
+
+        if ($request->hasFile('image')) {
+            $image = $request->file('image');
+            $file_name = Carbon::now()->timestamp.'.'.$image->extension();
+            $image->move(public_path('uploads/slides'), $file_name);
+            $slide->image = $file_name;
+        }
+
+        $slide->save();
+
+        return redirect()->route('admin.slides')->with('status', 'Slide added successfully!');
+    }
+
+    public function slide_edit(int $id): View
+    {
+        $slide = Slide::findOrFail($id);
+
+        return view('admin.slide-edit', compact('slide'));
+    }
+
+    public function slide_update(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'tagline' => 'required|string|max:255',
+            'title' => 'required|string|max:255',
+            'subtitle' => 'required|string|max:255',
+            'link' => 'required|string|max:255',
+            'status' => 'required|boolean',
+            'image' => 'nullable|mimes:png,jpg,jpeg,webp|max:2048',
+        ]);
+
+        $slide = Slide::findOrFail($request->id);
+        $slide->tagline = $request->tagline;
+        $slide->title = $request->title;
+        $slide->subtitle = $request->subtitle;
+        $slide->link = $request->link;
+        $slide->status = $request->status;
+
+        if ($request->hasFile('image')) {
+            if ($slide->image && File::exists(public_path('uploads/slides/'.$slide->image))) {
+                File::delete(public_path('uploads/slides/'.$slide->image));
+            }
+            $image = $request->file('image');
+            $file_name = Carbon::now()->timestamp.'.'.$image->extension();
+            $image->move(public_path('uploads/slides'), $file_name);
+            $slide->image = $file_name;
+        }
+
+        $slide->save();
+
+        return redirect()->route('admin.slides')->with('status', 'Slide updated successfully!');
+    }
+
+    public function slide_delete(int $id): RedirectResponse
+    {
+        $slide = Slide::findOrFail($id);
+
+        if ($slide->image && File::exists(public_path('uploads/slides/'.$slide->image))) {
+            File::delete(public_path('uploads/slides/'.$slide->image));
+        }
+
+        $slide->delete();
+
+        return redirect()->route('admin.slides')->with('status', 'Slide deleted successfully!');
     }
 }
