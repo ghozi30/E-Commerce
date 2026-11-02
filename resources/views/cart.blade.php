@@ -32,6 +32,18 @@
             </div>
         @endif
 
+        @if(Session::has('error'))
+            <div class="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded-r shadow-sm flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-circle-exclamation text-red-500"></i>
+                    <span>{{ Session::get('error') }}</span>
+                </div>
+                <button type="button" onclick="this.parentElement.remove()" class="text-red-500 hover:text-red-700">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        @endif
+
         @if($items->count() > 0)
             <div class="flex flex-col lg:flex-row gap-8">
                 
@@ -142,8 +154,39 @@
                 </div>
 
                 <!-- Cart Summary -->
-                <div class="w-full lg:w-1/3">
-                    <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6 space-y-6">
+                <div class="w-full lg:w-1/3 space-y-6">
+                    <!-- Coupon Form -->
+                    <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+                        <h4 class="font-bold text-gray-800 text-base mb-3">Have a Coupon?</h4>
+                        @if(Session::has('coupon'))
+                            <div class="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
+                                <div>
+                                    <span class="font-bold text-green-700 tracking-wider">{{ Session::get('coupon')['code'] }}</span>
+                                    <span class="text-xs text-green-600 block">
+                                        Applied ({{ Session::get('coupon')['type'] === 'percent' ? Session::get('coupon')['value'].'%' : '$'.number_format(Session::get('coupon')['value'], 2) }} off)
+                                    </span>
+                                </div>
+                                <form action="{{ route('cart.remove.coupon') }}" method="POST">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="text-red-500 hover:text-red-700 text-sm font-medium" title="Remove Coupon">
+                                        <i class="fa-solid fa-trash-can mr-1"></i> Remove
+                                    </button>
+                                </form>
+                            </div>
+                        @else
+                            <form action="{{ route('cart.apply.coupon') }}" method="POST" class="flex gap-2">
+                                @csrf
+                                <input type="text" name="coupon_code" placeholder="Enter coupon code" required class="flex-1 uppercase border px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary">
+                                <button type="submit" class="bg-primary hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition shadow-sm">
+                                    Apply
+                                </button>
+                            </form>
+                        @endif
+                    </div>
+
+                    <!-- Order Totals -->
+                    <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6 space-y-4">
                         <h3 class="font-bold text-gray-800 text-lg border-b pb-3">Order Summary</h3>
 
                         <div class="space-y-3 text-sm">
@@ -152,10 +195,27 @@
                                 <span class="font-semibold text-gray-800">${{ number_format(Cart::instance('cart')->subtotal(), 2) }}</span>
                             </div>
 
-                            <div class="flex justify-between text-gray-600">
-                                <span>Estimated Tax (10%)</span>
-                                <span class="font-semibold text-gray-800">${{ number_format(Cart::instance('cart')->tax(), 2) }}</span>
-                            </div>
+                            @if(Session::has('discounts'))
+                                <div class="flex justify-between text-green-600">
+                                    <span>Discount ({{ Session::get('coupon')['code'] }})</span>
+                                    <span class="font-semibold">-${{ number_format((float)Session::get('discounts')['discount'], 2) }}</span>
+                                </div>
+
+                                <div class="flex justify-between text-gray-600 border-t pt-2">
+                                    <span>Subtotal after Discount</span>
+                                    <span class="font-semibold text-gray-800">${{ number_format((float)Session::get('discounts')['subtotal'], 2) }}</span>
+                                </div>
+
+                                <div class="flex justify-between text-gray-600">
+                                    <span>Estimated Tax (10%)</span>
+                                    <span class="font-semibold text-gray-800">${{ number_format((float)Session::get('discounts')['tax'], 2) }}</span>
+                                </div>
+                            @else
+                                <div class="flex justify-between text-gray-600">
+                                    <span>Estimated Tax (10%)</span>
+                                    <span class="font-semibold text-gray-800">${{ number_format(Cart::instance('cart')->tax(), 2) }}</span>
+                                </div>
+                            @endif
 
                             <div class="flex justify-between text-gray-600">
                                 <span>Shipping</span>
@@ -164,11 +224,17 @@
 
                             <div class="border-t pt-3 flex justify-between text-base font-bold text-gray-900">
                                 <span>Total</span>
-                                <span class="text-primary text-xl">${{ number_format(Cart::instance('cart')->total(), 2) }}</span>
+                                <span class="text-primary text-xl">
+                                    @if(Session::has('discounts'))
+                                        ${{ number_format((float)Session::get('discounts')['total'], 2) }}
+                                    @else
+                                        ${{ number_format(Cart::instance('cart')->total(), 2) }}
+                                    @endif
+                                </span>
                             </div>
                         </div>
 
-                        <a href="{{ Route::has('cart.checkout') ? route('cart.checkout') : '#' }}" class="block text-center w-full bg-primary hover:bg-blue-600 text-white font-medium py-3 rounded-lg transition shadow-md">
+                        <a href="{{ route('cart.checkout') }}" class="block text-center w-full bg-primary hover:bg-blue-600 text-white font-medium py-3 rounded-lg transition shadow-md">
                             Proceed to Checkout <i class="fa-solid fa-arrow-right ml-1"></i>
                         </a>
                     </div>
@@ -195,3 +261,4 @@
     </div>
 </section>
 @endsection
+
